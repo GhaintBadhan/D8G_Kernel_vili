@@ -4,47 +4,61 @@ on:
   workflow_dispatch:
     inputs:
       source_repo:
-        description: 'https://github.com/Spanish-or-Vanish/kernel_xiaomi_sm8350'
+        description: 'https://github.com/Spanish-or-Vanish/kernel_xiaomi_sm8350/tree/lineage-24.0'
         required: true
-        default: 'https://github.com/GhaintBadhan/D8G_Kernel_vili'
-      folder_path:
-        description: 'lib/zstd'
+      folder_name:
+        description: 'zstd'
         required: true
-        default: 'lib/zstd'
+        default: 'zstd'
 
 jobs:
   transfer:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Allows the action to commit and push changes back to the repo
+      contents: write
 
     steps:
       - name: Checkout Destination Repo
         uses: actions/checkout@v4
 
-      - name: Clone Source and Copy Folder
+      - name: Locate and Copy Folder
         run: |
           # Clone the source repository into a temporary folder
           git clone ${{ github.event.inputs.source_repo }} /tmp/source-repo
           
-          # Create target directory if it doesn't exist
-          mkdir -p $(dirname "${{ github.event.inputs.folder_path }}")
+          TARGET_QUERY="${{ github.event.inputs.folder_name }}"
           
-          # Copy the specified folder over
-          cp -r /tmp/source-repo/${{ github.event.inputs.folder_path }} ${{ github.event.inputs.folder_path }}
+          echo "Searching for '$TARGET_QUERY' in the source repository..."
+          
+          # Automatically find the folder anywhere in the source repository
+          FOUND_PATH=$(find /tmp/source-repo -type d -name "$(basename "$TARGET_QUERY")" | grep -v "\.git" | head -n 1)
+          
+          if [ -z "$FOUND_PATH" ]; then
+            echo "Error: Could not find a folder named '$TARGET_QUERY' in the source repository."
+            exit 1
+          fi
+          
+          echo "Found folder at: $FOUND_PATH"
+          
+          # Determine where to place it in the destination repo (defaulting to lib/zstd if just 'zstd' was given)
+          DEST_DIR="lib/zstd"
+          mkdir -p "$DEST_DIR"
+          
+          # Copy contents over
+          cp -r "$FOUND_PATH"/* "$DEST_DIR"/
+          echo "Successfully copied files!"
 
       - name: Commit and Push to Destination
         run: |
           git config --global user.name "GhaintBadhan"
-          git config --global user.email "GhaintBadhan@gmail.com"
+          git config --global user.email "ghaint.badhan@gmail.com"
           
-          git add "${{ github.event.inputs.folder_path }}"
+          git add lib/zstd
           
-          # Check if there are changes to commit
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "chore: copy folder from source repository online"
+            git commit -m "chore: dynamically copy zstd folder from source repo online"
             git push
-            echo "Successfully pushed folder to repository!"
+            echo "Successfully pushed folder to destination repository!"
           fi
