@@ -10356,7 +10356,11 @@ static int should_we_balance(struct lb_env *env)
 	 * However, we bail out if we already have tasks or a wakeup pending,
 	 * to optimize wakeup latency.
 	 */
-	if (env->idle == CPU_NEWLY_IDLE) {
+	#ifndef SCHED_FEAT_TTWU_QUEUE
+#define SCHED_FEAT_TTWU_QUEUE 0
+#endif
+
+if (env->idle == CPU_NEWLY_IDLE) {
 #if SCHED_FEAT_TTWU_QUEUE
 		if (env->dst_rq->nr_running > 0 || !llist_empty(&env->dst_rq->wake_list))
 			return 0;
@@ -10366,6 +10370,7 @@ static int should_we_balance(struct lb_env *env)
 #endif
 		return 1;
 	}
+
 
 	/* Try to find first idle CPU */
 	for_each_cpu_and(cpu, group_balance_mask(sg), env->cpus) {
