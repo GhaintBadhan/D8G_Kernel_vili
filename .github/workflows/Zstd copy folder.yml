@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       source_repo:
-        description: 'https://github.com/Spanish-or-Vanish/kernel_xiaomi_sm8350/tree/lineage-24.0'
+        description: 'https://github.com/Spanish-or-Vanish/kernel_xiaomi_sm8350'
         required: true
-        default: 'https://github.com/GhaintBadhan/D8G_Kernel_vili/new/13'
+        default: 'https://github.com/GhaintBadhan/D8G_Kernel_vili'
       folder_path:
         description: 'lib/zstd'
         required: true
-        default: 'lib/'
+        default: 'lib/zstd'
 
 jobs:
   transfer:
